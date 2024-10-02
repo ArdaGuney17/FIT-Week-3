@@ -22,7 +22,7 @@ def main():
     think = Think.Think(act)
 
     # Initialize the webcam capture
-    cap = cv2.VideoCapture(1)  # Use the default camera (0)
+    cap = cv2.VideoCapture(0)  # Use the default camera (0)
 
     # Main loop to process video frames
     while cap.isOpened():
