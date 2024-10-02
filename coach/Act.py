@@ -1,12 +1,13 @@
 # Act Component: Provide feedback to the user
 import threading
+import time
 
 import mediapipe as mp
 import cv2
 import numpy as np
 import random
 import pyttsx3
-
+import queue
 
 # Act Component: Visualization to motivate user, visualization such as the skeleton and debugging information.
 # Things to add: Other graphical visualization, a proper GUI, more verbal feedback
@@ -22,9 +23,13 @@ class Act:
         self.explosion_frame_count = 0  # Frame counter for explosion duration
         self.explosion_duration = 30  # Number of frames to show explosion effect
         self.engine = pyttsx3.init()
+        self.speech_queue = queue.Queue()
 
         self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left', 'that is awesome', 'you have almost finished the exercise']
         # Handles balloon inflation and reset after explosion
+
+        t = threading.Thread(target=self._speech_thread, args=())
+        t.start()
 
     def handle_balloon_inflation(self):
         """
@@ -50,14 +55,18 @@ class Act:
         Speaks the given text using pyttsx3 text-to-speech engine.
         :param text: The text to be spoken
         """
-        # Create thread
-        self.engine.say(text)
-        self.engine.runAndWait()
-        # t = threading.Thread(target=self._speak_text, args=(text,))
-        # t.start()
-    def _speak_text(self, text):
-        self.engine.say(text)
-        self.engine.runAndWait()
+        self.speech_queue.put(text)
+
+    def _speech_thread(self):
+        while True:
+            try:
+                # Try to get an item with a small timeout to avoid blocking indefinitely
+                item = self.speech_queue.get(timeout=1)
+                self.engine.say(item)
+                self.engine.runAndWait()
+                self.speech_queue.task_done()
+            except queue.Empty:
+                time.sleep(1)
 
     def explode_balloon(self):
         """
@@ -67,7 +76,6 @@ class Act:
         self.exploded = True  # Mark the balloon as exploded
         self.create_explosion_fragments()  # Generate the explosion fragments
         self.speak_text("boooom booooom booom")
-        self.engine.runAndWait()
 
     def reset_balloon(self):
         """
@@ -81,7 +89,6 @@ class Act:
         self.explosion_fragments.clear()  # Clear the fragments after explosion
 
         self.speak_text("You did great! Let's reset the balloon.")
-        self.engine.runAndWait()
         # Create explosion fragments with random sizes and positions
 
     def create_explosion_fragments(self):
