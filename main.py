@@ -33,33 +33,37 @@ def main():
             print("Failed to grab frame")
             break
 
-        # Sense: Detect joints
-        joints = sense.detect_joints(frame)
-        landmarks = joints.pose_landmarks
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
 
-        # If landmarks are detected, calculate the elbow angle
+        result = sense.detect_joints(mp_image)
+        landmarks = result.pose_landmarks
+
         if landmarks:
             # Extract joint coordinates for the left arm
             # For this example, we will use specific landmark indexes for shoulder, elbow, and wrist
-            shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
-            elbow = sense.extract_joint_coordinates(landmarks, 'left_elbow')
-            wrist = sense.extract_joint_coordinates(landmarks, 'left_wrist')
+            # shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
+            # elbow = sense.extract_joint_coordinates(landmarks, 'left_elbow')
+            # wrist = sense.extract_joint_coordinates(landmarks, 'left_wrist')
+
+            # right_hand = sense.extract_joint_coordinates(landmarks, 'right_hand')
+
+
 
             # Calculate the elbow angle
-            elbow_angle_mvg = sense.calculate_angle(shoulder, elbow, wrist)
+            # elbow_angle_mvg = sense.calculate_angle(shoulder, elbow, wrist)
 
             # Think: Next, give the angles to the decision-making component and make decisions based on joint data
-            think.update_state(elbow_angle_mvg, sense.previous_angle)
+            # think.update_state(elbow_angle_mvg, sense.previous_angle)
 
             # We'll save the previous angle for later comparison
-            sense.previous_angle = elbow_angle_mvg
+            # sense.previous_angle = elbow_angle_mvg
 
-            decision = think.state
+            # decision = think.state
 
             # Act: Provide feedback to the user.
-            act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg)
+            act.provide_feedback(mp_image, result)
             # Render the balloon visualization
-            act.visualize_balloon()
+            # act.visualize_balloon()
 
             # think.check_for_timeout()
 

@@ -9,6 +9,11 @@ import random
 import pyttsx3
 import queue
 
+from mediapipe import solutions
+from mediapipe.framework.formats import landmark_pb2
+
+# https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
+
 # Act Component: Visualization to motivate user, visualization such as the skeleton and debugging information.
 # Things to add: Other graphical visualization, a proper GUI, more verbal feedback
 class Act:
@@ -152,7 +157,27 @@ class Act:
         # Wait for 1 ms and check if the window should be closed
         cv2.waitKey(1)
 
-    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg):
+    @staticmethod
+    def draw_landmarks_on_image(rgb_image, detection_result):
+        pose_landmarks_list = detection_result.pose_landmarks
+        annotated_image = np.copy(rgb_image)
+
+        # Loop through the detected poses to visualize.
+        for idx in range(len(pose_landmarks_list)):
+            pose_landmarks = pose_landmarks_list[idx]
+
+            # Draw the pose landmarks.
+            pose_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
+            pose_landmarks_proto.landmark.extend([
+                landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in pose_landmarks
+            ])
+            solutions.drawing_utils.draw_landmarks(
+                annotated_image,
+                pose_landmarks_proto,
+                solutions.pose.POSE_CONNECTIONS,
+                solutions.drawing_styles.get_default_pose_landmarks_style())
+        return annotated_image
+    def provide_feedback(self, frame, data):
         """
         Displays the skeleton and some text using open cve.
 
@@ -162,29 +187,29 @@ class Act:
         :param elbow_angle_mvg: The moving average from the left elbow angle.
 
         """
+        pass
 
-        mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
+        # mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
 
-        # Define the number and text to display
-        number = elbow_angle_mvg
-        text = " "
-        if decision == 'flexion':
-            text = "You are flexing your elbow! %s" % number
-        elif decision == 'extension':
-            text = "You are extending your elbow! %s" % number
-
-
-        # Set the position, font, size, color, and thickness for the text
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = .9
-        font_color = (0, 0, 0)  # White color in BGR
+        text = f"Position Right Hand ({data.pose_landmarks})"
+        #
+        # # Set the position, font, size, color, and thickness for the text
+        font = cv2.FONT_HERSHEY_DUPLEX
+        font_scale = .3
+        font_color = (255, 255, 255)
         thickness = 2
-
-        # Define the position for the number and text
+        #
+        # # Define the position for the number and text
         text_position = (50, 50)
+        #
+        # # Draw the text on the image
 
-        # Draw the text on the image
-        cv2.putText(frame, text, text_position, font, font_scale, font_color, thickness)
+        annotated_image = self.draw_landmarks_on_image(frame.numpy_view(), data)
+
+        cv2.putText(annotated_image, text, text_position, font, font_scale, font_color, thickness)
+
+        # segmentation_mask = data.segmentation_masks[0].numpy_view()
+        # visualized_mask = np.repeat(segmentation_mask[:, :, np.newaxis], 3, axis=2) * 255
 
         # Display the frame (for debugging purposes)
-        cv2.imshow('Sport Coaching Program', frame)
+        cv2.imshow('Sport Coaching Program', cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
