@@ -41,18 +41,13 @@ def main():
 
         # If landmarks are detected, calculate the elbow angle
         if landmarks:
-            # Extract joint coordinates for the left arm
-            # For this example, we will use specific landmark indexes for shoulder, elbow, and wrist
-            # shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
-            # elbow = sense.extract_joint_coordinates(landmarks, 'left_elbow')
-            # wrist = sense.extract_joint_coordinates(landmarks, 'left_wrist')
             left_knee = sense.extract_joint_coordinates(landmarks, "left_knee")
             right_knee = sense.extract_joint_coordinates(landmarks, "right_knee")
             left_wrist = sense.extract_joint_coordinates(landmarks, "left_wrist")
             right_wrist = sense.extract_joint_coordinates(landmarks, "right_wrist")
-            overlay_rect = act.spawn_balloon(1, frame)
-            # print(overlay_rect)
+            overlay_rect = act.show_balloon(1, frame)
             if think.is_landmark_over_image(right_wrist, overlay_rect, frame_width, frame_height):
+                act.enlarge()
                 print("Hand is over the image!")
             mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
             frame = cv2.flip(frame, 1)

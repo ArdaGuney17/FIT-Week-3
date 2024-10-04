@@ -25,7 +25,7 @@ class Act:
         self.explosion_duration = 30  # Number of frames to show explosion effect
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
-
+        self.stage = 0
         self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left',
                                       'that is awesome', 'you have almost finished the exercise']
         # Handles balloon inflation and reset after explosion
@@ -190,12 +190,48 @@ class Act:
         # Display the frame (for debugging purposes)
         cv2.imshow('Sport Coaching Program', frame)
 
-    def spawn_balloon(self, type, frame):
-        overlay_img = cv2.imread('images/hand.jpg')
+    def show_balloon(self, type, frame):
+        # Choose image
+        balloon_paths = {
+            0: "Left_hand",
+            1: "Left_knee",
+            2: "Right_hand",
+            3: "Right_knee"
+        }
+        balloon_colors = {
+            0: "green",
+            1: "yellow",
+            2: "blue",
+            3: "red"
+        }
+        if 0 <= self.stage <= 5:
+            base_path = f"images/{balloon_paths[type]}/{balloon_colors[type]}_balloon"
+            if self.stage == 0:
+                path = f"{base_path}.png"
+            else:
+                path = f"{base_path}_popping{self.stage}.png"
+        # Get image
+        overlay_img = cv2.imread(path)
         overlay_img = cv2.resize(overlay_img, (100, 100))
         overlay_height, overlay_width, _ = overlay_img.shape
-        overlay_pos = (50, 50)  # Top-left position (x, y)
-        overlay_rect = (overlay_pos[0], overlay_pos[1], overlay_pos[0] + overlay_width, overlay_pos[1] + overlay_height)
-        frame[overlay_pos[1]:overlay_pos[1] + overlay_height,
-        overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img
+        overlay_pos = self.random_location()
+        overlay_rect = (overlay_pos[0], overlay_pos[1], overlay_pos[0] + overlay_width, overlay_pos[1] + overlay_height) #hit box
+        frame[overlay_pos[1]:overlay_pos[1] + overlay_height, overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img #put in frame
         return overlay_rect
+
+    def random_location(self):
+        return 50, 50
+
+    def enlarge(self):
+        self.stage += 1
+
+# class Bubble:
+#     def __init__(self, overlay_pos, overlay_rect, overlay_image):
+#         """
+#         Initialize the ImageRectangle with its top-left corner (x, y),
+#         and the width and height of the rectangle.
+#         """
+#         self.overlay_pos = overlay_pos
+#         self.size = 100
+#         self.overlay_rect = overlay_rect
+#         self.overlay_image = overlay_image
