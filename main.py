@@ -3,6 +3,7 @@ import mediapipe as mp
 from coach import Sense
 from coach import Think
 from coach import Act
+import time  # Import the time module
 
 import numpy as np
 
@@ -24,6 +25,9 @@ def main():
     # Initialize the webcam capture
     cap = cv2.VideoCapture(0)  # Use the default camera (0)
 
+    # Start the timer
+    start_time = time.time()
+
     # Main loop to process video frames
     while cap.isOpened():
 
@@ -32,6 +36,9 @@ def main():
         if not ret:
             print("Failed to grab frame")
             break
+
+        # Calculate elapsed time
+        elapsed_time = time.time() - start_time  # Calculate elapsed time
 
         # Sense: Detect joints
         joints = sense.detect_joints(frame)
@@ -60,7 +67,7 @@ def main():
             decision = think.state
 
             # Act: Provide feedback to the user.
-            act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg, distance=distance)
+            act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg, distance=distance, elapsed_time=elapsed_time)
             # Render the balloon visualization
             act.visualize_balloon()
 

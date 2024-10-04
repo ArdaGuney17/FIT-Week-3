@@ -10,6 +10,7 @@ import pyttsx3
 import queue
 
 
+
 # Act Component: Visualization to motivate user, visualization such as the skeleton and debugging information.
 # Things to add: Other graphical visualization, a proper GUI, more verbal feedback
 class Act:
@@ -154,7 +155,7 @@ class Act:
         # Wait for 1 ms and check if the window should be closed
         cv2.waitKey(1)
 
-    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg, distance):
+    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg, distance, elapsed_time):
         """
         Displays the skeleton and some text using OpenCV, adjusts feedback based on distance.
 
@@ -189,6 +190,8 @@ class Act:
                     2)  # White color for contrast
         cv2.putText(frame, distance_text, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
                     2)  # Adjusted y-coordinate
-
+        # Format the elapsed time to display
+        elapsed_time_text = f"Duration: {elapsed_time:.2f} seconds"
+        cv2.putText(frame, elapsed_time_text, (50, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
         # Display the frame
         cv2.imshow('Sport Coaching Program', frame)
