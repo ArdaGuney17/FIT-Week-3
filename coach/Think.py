@@ -1,3 +1,6 @@
+import math
+
+import cv2
 from transitions import Machine
 import collections
 
@@ -14,7 +17,6 @@ class Think(object):
         :param flexion_threshold: threshold for entering the flexion state
         :param extension_threshold: threshold for entering the extension state
         """
-
 
         # Define initial state and thresholds for transitions
         self.state = 'flexion'  # Initial state
@@ -52,7 +54,7 @@ class Think(object):
         :param angle: The current elbow angle
         :return: True if flexion threshold is reached, False otherwise
         """
-        return angle < self.flexion_threshold # Flexion is detected when the elbow is bent
+        return angle < self.flexion_threshold  # Flexion is detected when the elbow is bent
 
     # Condition for transition to 'extension' state
     def is_extension_threshold_reached(self, angle):
@@ -62,7 +64,7 @@ class Think(object):
                  :param angle: The current elbow angle
                  :return: True if extension threshold is reached, False otherwise
                  """
-        return angle > self.extension_threshold # Extension is detected when the elbow is almost straight
+        return angle > self.extension_threshold  # Extension is detected when the elbow is almost straight
 
     # Method to update the FSM state based on the current elbow angle
     def update_state(self, current_angle, previous_angle):
@@ -94,11 +96,21 @@ class Think(object):
         Callback when transitioning from flexion to extension. Increments the repetition count.
         """
         self.flexion_to_extension_count += 1
-        self.act_component.handle_balloon_inflation() # Inflate the balloon
+        self.act_component.handle_balloon_inflation()  # Inflate the balloon
 
     def increment_ext_to_flexion(self):
         """
         Callback when transitioning from extension to flexion.
         """
         self.extension_to_flexion_count += 1
-        self.act_component.handle_balloon_inflation() # Reset timeout trigger
+        self.act_component.handle_balloon_inflation()  # Reset timeout trigger
+
+    def check_movement(self, contours, frame, point):
+        image_height, image_width, _ = frame.shape
+        norm_cord = (point[0]*image_width, point[1]*image_height)
+        # print(cv2.pointPolygonTest(contours, norm_rw, False))
+        # print("cont", contours, "/npoint", norm_rw)
+        # print(norm_cord)
+        if cv2.pointPolygonTest(contours, norm_cord, False) == 1:
+            print("in")
+

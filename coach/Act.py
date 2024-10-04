@@ -188,3 +188,20 @@ class Act:
 
         # Display the frame (for debugging purposes)
         cv2.imshow('Sport Coaching Program', frame)
+
+    def spawn_balloon(self, type, frame):
+        # Read logo and resize
+        logo = cv2.imread('images/hand.jpg')
+        size = 100
+        logo = cv2.resize(logo, (size, size))
+        img2gray = cv2.cvtColor(logo, cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(img2gray, 1, 255, cv2.THRESH_BINARY)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # print(contours)
+        roi = frame[-size - 10:-10, -size - 10:-10]
+        roi[np.where(mask)] = 0
+        roi += logo
+        print(roi)
+        return contours[0]
+
+
