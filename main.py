@@ -41,13 +41,12 @@ def main():
         if landmarks:
             # Extract joint coordinates for the left arm
             # For this example, we will use specific landmark indexes for shoulder, elbow, and wrist
-            left_shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
-            right_shoulder = sense.extract_joint_coordinates(landmarks, 'right_shoulder')
+            shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
             elbow = sense.extract_joint_coordinates(landmarks, 'left_elbow')
             wrist = sense.extract_joint_coordinates(landmarks, 'left_wrist')
 
             # Calculate the elbow angle
-            elbow_angle_mvg = sense.calculate_angle(left_shoulder, elbow, wrist)
+            elbow_angle_mvg = sense.calculate_angle(shoulder, elbow, wrist)
 
             # Calculate the distance from the camera
             distance = sense.calculate_distance(landmarks)
