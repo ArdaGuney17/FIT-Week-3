@@ -33,9 +33,10 @@ def main():
             print("Failed to grab frame")
             break
 
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
 
-        result = sense.detect_joints(mp_image)
+        result = sense.detect_joints(mp_image, cap)
         landmarks = result.pose_landmarks
 
         if landmarks:

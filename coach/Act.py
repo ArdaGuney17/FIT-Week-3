@@ -11,6 +11,8 @@ import queue
 
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
+from mediapipe.tasks.python import vision
+
 
 # https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
 
@@ -29,6 +31,8 @@ class Act:
         self.explosion_duration = 30  # Number of frames to show explosion effect
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
+
+        self.screen_width, self.screen_height = self.get_screen_size()
 
         self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left', 'that is awesome', 'you have almost finished the exercise']
         # Handles balloon inflation and reset after explosion
@@ -178,14 +182,18 @@ class Act:
                 solutions.drawing_styles.get_default_pose_landmarks_style())
         return annotated_image
 
-    def overlay_png(self, background, overlay, pos=(0, 0)):
-        # Convert PNG with alpha channel to BGRA
+    def overlay_png(self, background, overlay, pos=(0, 0), overlay_size=None):
+        # Resize the overlay if a size is specified
+        if overlay_size is not None:
+            overlay = cv2.resize(overlay, overlay_size)
+
+        # Split the channels (B, G, R, A)
         b, g, r, a = cv2.split(overlay)
         overlay_rgb = cv2.merge((b, g, r))
 
         # Get dimensions of background and overlay
         bg_height, bg_width = background.shape[:2]
-        ov_height, ov_width = overlay.shape[:2]
+        ov_height, ov_width = overlay_rgb.shape[:2]
 
         x, y = pos
 
@@ -207,6 +215,14 @@ class Act:
                                                                                                 None] * overlay_rgb
 
         return background
+
+    def get_screen_size(self):
+        # screen = cv2.namedWindow('ScreenSize', cv2.WINDOW_NORMAL)
+        # cv2.setWindowProperty('ScreenSize', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        # screen_width, screen_height = cv2.getWindowImageRect('ScreenSize')[2:4]
+        # cv2.destroyWindow('ScreenSize')
+        # return screen_width, screen_height
+        return 1920, 1080
     def provide_feedback(self, frame, data):
         """
         Displays the skeleton and some text using open cve.
@@ -217,11 +233,11 @@ class Act:
         :param elbow_angle_mvg: The moving average from the left elbow angle.
 
         """
-        pass
+        # pass
 
         # mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
 
-        text = f"Position Right Hand ({data.pose_landmarks})"
+        text = f"Position Right Hand ({data.pose_landmarks[0]})"
         #
         # # Set the position, font, size, color, and thickness for the text
         font = cv2.FONT_HERSHEY_DUPLEX
@@ -234,15 +250,20 @@ class Act:
         #
         # # Draw the text on the image
 
+        # frame_resized = cv2.resize(frame, (1920, 1080))
+
         annotated_image = self.draw_landmarks_on_image(frame.numpy_view(), data)
 
         cv2.putText(annotated_image, text, text_position, font, font_scale, font_color, thickness)
 
         handImg = cv2.imread("images/hand.png", cv2.IMREAD_UNCHANGED)
 
-        annotated_image = self.overlay_png(annotated_image, handImg, (50,50))
+        annotated_image = self.overlay_png(annotated_image, handImg, (50,50), (100, 100))
         # segmentation_mask = data.segmentation_masks[0].numpy_view()
         # visualized_mask = np.repeat(segmentation_mask[:, :, np.newaxis], 3, axis=2) * 255
 
-        # Display the frame (for debugging purposes)
+
+        cv2.namedWindow("Sport Coaching Program", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("Sport Coaching Program", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
         cv2.imshow('Sport Coaching Program', cv2.cvtColor(annotated_image, cv2.COLOR_BGRA2RGB))

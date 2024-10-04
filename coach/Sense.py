@@ -15,7 +15,7 @@ class Sense:
         base_options = python.BaseOptions(model_asset_path='models/pose_landmarker_full.task') # delegate=mp.tasks.BaseOptions.Delegate.GPU on linux only
         options = vision.PoseLandmarkerOptions(
             base_options=base_options,
-            running_mode=VisionTaskRunningMode.IMAGE, # TODO Should be LIVESTREAM
+            running_mode=VisionTaskRunningMode.VIDEO, # TODO Should be LIVESTREAM
             output_segmentation_masks=True)
         self.detector = vision.PoseLandmarker.create_from_options(options)
 
@@ -28,5 +28,5 @@ class Sense:
         # self.angle_window = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
         # self.previous_angle = -1
 
-    def detect_joints(self, frame):
-        return self.detector.detect(frame)
+    def detect_joints(self, frame, capture):
+        return self.detector.detect_for_video(frame, int(capture.get(cv2.CAP_PROP_POS_MSEC)))
