@@ -29,7 +29,8 @@ def main():
 
         # Capture frame-by-frame from the webcam
         ret, frame = cap.read()
-        frame = cv2.flip(frame, 1)
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         if not ret:
             print("Failed to grab frame")
             break
@@ -49,35 +50,14 @@ def main():
             right_knee = sense.extract_joint_coordinates(landmarks, "right_knee")
             left_wrist = sense.extract_joint_coordinates(landmarks, "left_wrist")
             right_wrist = sense.extract_joint_coordinates(landmarks, "right_wrist")
-
-            edges = act.spawn_balloon(1, frame)
-            # print(edges)
-            # cv2.flip(frame, 0)
-            think.check_movement(edges, frame, left_wrist)
-            think.check_movement(edges, frame, right_wrist)
+            overlay_rect = act.spawn_balloon(1, frame)
+            # print(overlay_rect)
+            if think.is_landmark_over_image(right_wrist, overlay_rect, frame_width, frame_height):
+                print("Hand is over the image!")
             mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
-            cv2.imshow("thing", frame)
+            frame = cv2.flip(frame, 1)
+            cv2.imshow("Webcam Feed", frame)
 
-
-            # Calculate the elbow angle
-            # elbow_angle_mvg = sense.calculate_angle(shoulder, elbow, wrist)
-
-            # Think: Next, give the angles to the decision-making component and make decisions based on joint data
-            # think.update_state(elbow_angle_mvg, sense.previous_angle)
-
-            # We'll save the previous angle for later comparison
-            # sense.previous_angle = elbow_angle_mvg
-
-            # decision = think.state
-
-            # Act: Provide feedback to the user.
-            # act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg)
-            # Render the balloon visualization
-            # act.visualize_balloon()
-
-            # think.check_for_timeout()
-
-        # Exit if the 'q' key is pressed
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 

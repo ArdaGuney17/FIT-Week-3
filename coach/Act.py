@@ -9,6 +9,7 @@ import random
 import pyttsx3
 import queue
 
+
 # Act Component: Visualization to motivate user, visualization such as the skeleton and debugging information.
 # Things to add: Other graphical visualization, a proper GUI, more verbal feedback
 class Act:
@@ -25,7 +26,8 @@ class Act:
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
 
-        self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left', 'that is awesome', 'you have almost finished the exercise']
+        self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left',
+                                      'that is awesome', 'you have almost finished the exercise']
         # Handles balloon inflation and reset after explosion
 
         t = threading.Thread(target=self._speech_thread, args=())
@@ -173,7 +175,6 @@ class Act:
         elif decision == 'extension':
             text = "You are extending your elbow! %s" % number
 
-
         # Set the position, font, size, color, and thickness for the text
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = .9
@@ -190,18 +191,11 @@ class Act:
         cv2.imshow('Sport Coaching Program', frame)
 
     def spawn_balloon(self, type, frame):
-        # Read logo and resize
-        logo = cv2.imread('images/hand.jpg')
-        size = 100
-        logo = cv2.resize(logo, (size, size))
-        img2gray = cv2.cvtColor(logo, cv2.COLOR_BGR2GRAY)
-        ret, mask = cv2.threshold(img2gray, 1, 255, cv2.THRESH_BINARY)
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # print(contours)
-        roi = frame[-size - 10:-10, -size - 10:-10]
-        roi[np.where(mask)] = 0
-        roi += logo
-        print(roi)
-        return contours[0]
-
-
+        overlay_img = cv2.imread('images/hand.jpg')
+        overlay_img = cv2.resize(overlay_img, (100, 100))
+        overlay_height, overlay_width, _ = overlay_img.shape
+        overlay_pos = (50, 50)  # Top-left position (x, y)
+        overlay_rect = (overlay_pos[0], overlay_pos[1], overlay_pos[0] + overlay_width, overlay_pos[1] + overlay_height)
+        frame[overlay_pos[1]:overlay_pos[1] + overlay_height,
+        overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img
+        return overlay_rect

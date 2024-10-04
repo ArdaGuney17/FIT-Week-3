@@ -105,12 +105,9 @@ class Think(object):
         self.extension_to_flexion_count += 1
         self.act_component.handle_balloon_inflation()  # Reset timeout trigger
 
-    def check_movement(self, contours, frame, point):
-        image_height, image_width, _ = frame.shape
-        norm_cord = (point[0]*image_width, point[1]*image_height)
-        # print(cv2.pointPolygonTest(contours, norm_rw, False))
-        # print("cont", contours, "/npoint", norm_rw)
-        # print(norm_cord)
-        if cv2.pointPolygonTest(contours, norm_cord, False) == 1:
-            print("in")
-
+    def is_landmark_over_image(self, joint_coords, image_rect, frame_width, frame_height):
+        img_x1, img_y1, img_x2, img_y2 = image_rect
+        x, y = joint_coords[0] * frame_width, joint_coords[1] * frame_height
+        if img_x1 <= x <= img_x2 and img_y1 <= y <= img_y2:
+            return True
+        return False
