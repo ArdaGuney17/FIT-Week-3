@@ -9,6 +9,7 @@ import random
 import pyttsx3
 import queue
 
+
 # Act Component: Visualization to motivate user, visualization such as the skeleton and debugging information.
 # Things to add: Other graphical visualization, a proper GUI, more verbal feedback
 class Act:
@@ -25,7 +26,8 @@ class Act:
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
 
-        self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left', 'that is awesome', 'you have almost finished the exercise']
+        self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left',
+                                      'that is awesome', 'you have almost finished the exercise']
         # Handles balloon inflation and reset after explosion
 
         t = threading.Thread(target=self._speech_thread, args=())
@@ -152,39 +154,39 @@ class Act:
         # Wait for 1 ms and check if the window should be closed
         cv2.waitKey(1)
 
-    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg):
+    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg, distance):
         """
-        Displays the skeleton and some text using open cve.
+        Displays the skeleton and some text using OpenCV, adjusts feedback based on distance.
 
         :param decision: The decision in which state the user is from the think component.
-        :param frame: The currently processed frame form the webcam.
-        :param joints: The joints extracted from mediapipe from the current frame.
+        :param frame: The currently processed frame from the webcam.
+        :param joints: The joints extracted from MediaPipe from the current frame.
         :param elbow_angle_mvg: The moving average from the left elbow angle.
-
+        :param distance: Estimated distance from the camera.
         """
-
         mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
 
         # Define the number and text to display
         number = elbow_angle_mvg
-        text = " "
+        text = ""
+        distance_text = ""
+
         if decision == 'flexion':
-            text = "You are flexing your elbow! %s" % number
+            text = f"You are flexing your elbow! Angle: {number:.2f}°."
         elif decision == 'extension':
-            text = "You are extending your elbow! %s" % number
+            text = f"You are extending your elbow! Angle: {number:.2f}°."
 
-
-        # Set the position, font, size, color, and thickness for the text
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = .9
-        font_color = (0, 0, 0)  # White color in BGR
-        thickness = 2
-
-        # Define the position for the number and text
-        text_position = (50, 50)
+        # Correctly check the distance range
+        if 0.4 < distance < 0.5:
+            distance_text = "You are in range."
+        else:
+            distance_text = f"You are out of range! Distance: {distance:.2f} m."
 
         # Draw the text on the image
-        cv2.putText(frame, text, text_position, font, font_scale, font_color, thickness)
+        cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
+                    2)  # White color for contrast
+        cv2.putText(frame, distance_text, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
+                    2)  # Adjusted y-coordinate
 
-        # Display the frame (for debugging purposes)
+        # Display the frame
         cv2.imshow('Sport Coaching Program', frame)

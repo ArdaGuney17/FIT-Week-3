@@ -116,3 +116,22 @@ class Sense:
         left_ankle = [landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ANKLE.value].x,
                       landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ANKLE.value].y]
         return self.calculate_angle(left_hip, left_knee, left_ankle)
+
+    def calculate_distance(self, landmarks):
+        """
+        Estimates the distance of the user from the camera based on shoulder width.
+
+        Parameters:
+        - landmarks: The list of pose landmarks from MediaPipe
+
+        Returns:
+        - Distance estimate (in arbitrary units)
+        """
+        left_shoulder = self.extract_joint_coordinates(landmarks, 'left_shoulder')
+        right_shoulder = self.extract_joint_coordinates(landmarks, 'right_shoulder')
+
+        # Calculate the width between shoulders
+        shoulder_distance = math.sqrt((right_shoulder[0] - left_shoulder[0]) ** 2 +
+                                      (right_shoulder[1] - left_shoulder[1]) ** 2)
+
+        return shoulder_distance

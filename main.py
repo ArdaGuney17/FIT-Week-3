@@ -41,12 +41,16 @@ def main():
         if landmarks:
             # Extract joint coordinates for the left arm
             # For this example, we will use specific landmark indexes for shoulder, elbow, and wrist
-            shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
+            left_shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
+            right_shoulder = sense.extract_joint_coordinates(landmarks, 'right_shoulder')
             elbow = sense.extract_joint_coordinates(landmarks, 'left_elbow')
             wrist = sense.extract_joint_coordinates(landmarks, 'left_wrist')
 
             # Calculate the elbow angle
-            elbow_angle_mvg = sense.calculate_angle(shoulder, elbow, wrist)
+            elbow_angle_mvg = sense.calculate_angle(left_shoulder, elbow, wrist)
+
+            # Calculate the distance from the camera
+            distance = sense.calculate_distance(landmarks)
 
             # Think: Next, give the angles to the decision-making component and make decisions based on joint data
             think.update_state(elbow_angle_mvg, sense.previous_angle)
@@ -57,7 +61,7 @@ def main():
             decision = think.state
 
             # Act: Provide feedback to the user.
-            act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg)
+            act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg, distance=distance)
             # Render the balloon visualization
             act.visualize_balloon()
 
