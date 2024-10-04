@@ -177,6 +177,36 @@ class Act:
                 solutions.pose.POSE_CONNECTIONS,
                 solutions.drawing_styles.get_default_pose_landmarks_style())
         return annotated_image
+
+    def overlay_png(self, background, overlay, pos=(0, 0)):
+        # Convert PNG with alpha channel to BGRA
+        b, g, r, a = cv2.split(overlay)
+        overlay_rgb = cv2.merge((b, g, r))
+
+        # Get dimensions of background and overlay
+        bg_height, bg_width = background.shape[:2]
+        ov_height, ov_width = overlay.shape[:2]
+
+        x, y = pos
+
+        # Ensure the overlay doesn't exceed the background dimensions
+        if x + ov_width > bg_width or y + ov_height > bg_height:
+            ov_width = min(ov_width, bg_width - x)
+            ov_height = min(ov_height, bg_height - y)
+            overlay_rgb = cv2.resize(overlay_rgb, (ov_width, ov_height))
+            a = cv2.resize(a, (ov_width, ov_height))
+
+        # Prepare the region for overlay
+        overlay_area = background[y:y + ov_height, x:x + ov_width]
+
+        # Create a mask using the alpha channel
+        mask = a / 255.0
+
+        # Blend the overlay with the background
+        background[y:y + ov_height, x:x + ov_width] = (1.0 - mask[:, :, None]) * overlay_area + mask[:, :,
+                                                                                                None] * overlay_rgb
+
+        return background
     def provide_feedback(self, frame, data):
         """
         Displays the skeleton and some text using open cve.
@@ -208,8 +238,11 @@ class Act:
 
         cv2.putText(annotated_image, text, text_position, font, font_scale, font_color, thickness)
 
+        handImg = cv2.imread("images/hand.png", cv2.IMREAD_UNCHANGED)
+
+        annotated_image = self.overlay_png(annotated_image, handImg, (50,50))
         # segmentation_mask = data.segmentation_masks[0].numpy_view()
         # visualized_mask = np.repeat(segmentation_mask[:, :, np.newaxis], 3, axis=2) * 255
 
         # Display the frame (for debugging purposes)
-        cv2.imshow('Sport Coaching Program', cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
+        cv2.imshow('Sport Coaching Program', cv2.cvtColor(annotated_image, cv2.COLOR_BGRA2RGB))
