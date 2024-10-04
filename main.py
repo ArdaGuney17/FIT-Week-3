@@ -1,3 +1,5 @@
+import random
+
 import cv2
 import mediapipe as mp
 from coach import Sense
@@ -45,9 +47,11 @@ def main():
             right_knee = sense.extract_joint_coordinates(landmarks, "right_knee")
             left_wrist = sense.extract_joint_coordinates(landmarks, "left_wrist")
             right_wrist = sense.extract_joint_coordinates(landmarks, "right_wrist")
-            overlay_rect = act.show_balloon(1, frame)
-            if think.is_landmark_over_image(right_wrist, overlay_rect, frame_width, frame_height):
-                act.enlarge()
+            limbs = [left_wrist, left_knee, right_wrist, right_knee]
+            overlay_rect = act.show_balloon(act.current_balloon, frame)
+            # print(act.current_balloon, limbs[act.current_balloon])
+            if think.is_landmark_over_image(limbs[act.current_balloon], overlay_rect, frame_width, frame_height):
+                act.enlarge(frame_width,frame_height)
                 print("Hand is over the image!")
             mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
             frame = cv2.flip(frame, 1)

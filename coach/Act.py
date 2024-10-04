@@ -8,6 +8,7 @@ import numpy as np
 import random
 import pyttsx3
 import queue
+import random
 
 
 # Act Component: Visualization to motivate user, visualization such as the skeleton and debugging information.
@@ -25,9 +26,13 @@ class Act:
         self.explosion_duration = 30  # Number of frames to show explosion effect
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
-        self.stage = 0
         self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left',
                                       'that is awesome', 'you have almost finished the exercise']
+
+        self.stage = 0
+        self.location = (500, 100)
+        self.current_balloon = 0
+        self.limb_list = [0, 1, 2, 3]
         # Handles balloon inflation and reset after explosion
 
         t = threading.Thread(target=self._speech_thread, args=())
@@ -210,20 +215,40 @@ class Act:
                 path = f"{base_path}.png"
             else:
                 path = f"{base_path}_popping{self.stage}.png"
-        # Get image
         overlay_img = cv2.imread(path)
         overlay_img = cv2.resize(overlay_img, (100, 100))
         overlay_height, overlay_width, _ = overlay_img.shape
-        overlay_pos = self.random_location()
-        overlay_rect = (overlay_pos[0], overlay_pos[1], overlay_pos[0] + overlay_width, overlay_pos[1] + overlay_height) #hit box
-        frame[overlay_pos[1]:overlay_pos[1] + overlay_height, overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img #put in frame
+        overlay_pos = self.location
+        overlay_rect = (
+            overlay_pos[0], overlay_pos[1], overlay_pos[0] + overlay_width, overlay_pos[1] + overlay_height)  # hit box
+        frame[overlay_pos[1]:overlay_pos[1] + overlay_height,
+        overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img  # put in frame
         return overlay_rect
 
-    def random_location(self):
-        return 50, 50
+    def random_location(self, frame_width, frame_height):
+        x, y = 0, 0
+        if self.current_balloon == 0:
+            x1lim, x2lim = int(frame_width / 2), frame_width - 100
+            y1lim, y2lim = 0, int(frame_height / 2) - 100
+        elif self.current_balloon == 1:
+            x1lim, x2lim = int(frame_width / 2), frame_width - 100
+            y1lim, y2lim = int(frame_height / 2), frame_height - 100
+        elif self.current_balloon == 2:
+            x1lim, x2lim = 0, int(frame_width / 2) - 100
+            y1lim, y2lim = 0, int(frame_height / 2) - 100
+        elif self.current_balloon == 3:
+            x1lim, x2lim = 0, int(frame_width / 2) - 100
+            y1lim, y2lim = int(frame_height / 2), frame_height - 100
+        # return (0, frame_height-100)
+        return random.randrange(x1lim, x2lim, 1), random.randrange(y1lim, y2lim, 1)
 
-    def enlarge(self):
-        self.stage += 1
+    def enlarge(self, frame_width, frame_height):
+        if self.stage == 5:
+            self.stage = 0
+            self.current_balloon = random.choice([x for x in self.limb_list if x != self.current_balloon])
+            self.location = self.random_location(frame_width, frame_height)
+        else:
+            self.stage += 1
 
 # class Bubble:
 #     def __init__(self, overlay_pos, overlay_rect, overlay_image):

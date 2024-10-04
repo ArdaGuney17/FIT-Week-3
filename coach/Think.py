@@ -108,6 +108,7 @@ class Think(object):
     def is_landmark_over_image(self, joint_coords, image_rect, frame_width, frame_height):
         img_x1, img_y1, img_x2, img_y2 = image_rect
         x, y = joint_coords[0] * frame_width, joint_coords[1] * frame_height
+        print(x,y)
         if img_x1 <= x <= img_x2 and img_y1 <= y <= img_y2:
             return True
         return False
