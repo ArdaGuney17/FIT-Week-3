@@ -179,8 +179,10 @@ class Act:
         # Correctly check the distance range
         if 0.4 < distance < 0.5:
             distance_text = "You are in range."
-        else:
-            distance_text = f"You are out of range! Distance: {distance:.2f} m."
+        elif 0.4 > distance:
+            distance_text = f"You are out of range! Move closer to the camera."
+        elif 0.5 < distance:
+            distance_text = f"You are out of range! Move away from the camera."
 
         # Draw the text on the image
         cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
