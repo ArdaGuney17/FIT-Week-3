@@ -47,53 +47,6 @@ class Act:
                 self.speech_queue.task_done()
             except queue.Empty:
                 time.sleep(1)
-    def visualize_balloon(self):
-        """
-        Renders the balloon .
-        """
-
-        # Create a black background
-        img = np.zeros((500, 500, 3), dtype=np.uint8)
-
-        if not self.exploded:
-            # Draw the balloon (a circle) with dynamic size if it hasn't exploded
-            cv2.circle(img, (250, 300), self.balloon_size, (0, 0, 255), -1)  # Red balloon
-        else:
-            # Draw explosion fragments if balloon has exploded
-            for fragment in self.explosion_fragments:
-                x, y = fragment['position']
-                size = fragment['size']
-                color = fragment['color']
-
-                # Move fragments in random directions
-                x += fragment['dx']
-                y += fragment['dy']
-                fragment['position'] = (x, y)
-
-                # Draw each fragment as a small circle
-                cv2.circle(img, (x, y), size, color, -1)
-
-            self.explosion_frame_count += 1
-
-            # Reset the balloon after the explosion effect finishes
-            if self.explosion_frame_count >= self.explosion_duration:
-                self.reset_balloon()
-
-        cv2.putText(img, f'Repeat flexing/bending your left arm to pop the balloon!', (0, 50),
-                    cv2.FONT_HERSHEY_SIMPLEX, .55, (255, 255, 255), 2, cv2.LINE_AA)
-
-        # Add transition count and text
-        cv2.putText(img, f'Repetitions: {self.transition_count}', (150, 100),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(img, f'Balloon Size: {self.balloon_size}', (150, 150),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
-        # Show the image in the window
-        cv2.imshow('Flex and bend your left elbow!', img)
-
-        # Wait for 1 ms and check if the window should be closed
-        cv2.waitKey(1)
-
     def provide_feedback(self, decision, frame, joints, distance, elapsed_time):
         """
         Displays the skeleton and some text using open cve.
