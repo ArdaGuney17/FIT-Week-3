@@ -159,7 +159,7 @@ class Act:
         # Wait for 1 ms and check if the window should be closed
         cv2.waitKey(1)
 
-    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg):
+    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg, distance, elapsed_time):
         """
         Displays the skeleton and some text using open cve.
 
@@ -174,25 +174,31 @@ class Act:
 
         # Define the number and text to display
         number = elbow_angle_mvg
-        text = " "
+        text = ""
+        distance_text = ""
+        
         if decision == 'flexion':
             text = "You are flexing your elbow! %s" % number
         elif decision == 'extension':
             text = "You are extending your elbow! %s" % number
 
-        # Set the position, font, size, color, and thickness for the text
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = .9
-        font_color = (0, 0, 0)  # White color in BGR
-        thickness = 2
-
-        # Define the position for the number and text
-        text_position = (50, 50)
+        # Correctly check the distance range
+        if 0.4 < distance < 0.5:
+            distance_text = "You are in range."
+        elif 0.4 > distance:
+            distance_text = f"You are out of range! Move closer to the camera."
+        elif 0.5 < distance:
+            distance_text = f"You are out of range! Move away from the camera."
 
         # Draw the text on the image
-        cv2.putText(frame, text, text_position, font, font_scale, font_color, thickness)
-
-        # Display the frame (for debugging purposes)
+        cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
+                    2)  # White color for contrast
+        cv2.putText(frame, distance_text, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
+                    2)  # Adjusted y-coordinate
+        # Format the elapsed time to display
+        elapsed_time_text = f"Duration: {elapsed_time:.2f} seconds"
+        cv2.putText(frame, elapsed_time_text, (50, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+        # Display the frame
         cv2.imshow('Sport Coaching Program', frame)
 
     def show_balloon(self, type, frame):
