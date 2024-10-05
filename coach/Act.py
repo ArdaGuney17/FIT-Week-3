@@ -86,6 +86,39 @@ class Act:
         # Display the frame
         # cv2.imshow('Sport Coaching Program', frame)
 
+    def overlay_png(self, background, overlay, pos=(0, 0), overlay_size=None):
+        # Resize the overlay if a size is specified
+        if overlay_size is not None:
+            overlay = cv2.resize(overlay, overlay_size)
+
+        # Split the channels (B, G, R, A)
+        b, g, r, a = cv2.split(overlay)
+        overlay_rgb = cv2.merge((b, g, r))
+
+        # Get dimensions of background and overlay
+        bg_height, bg_width = background.shape[:2]
+        ov_height, ov_width = overlay_rgb.shape[:2]
+
+        x, y = pos
+
+        # Ensure the overlay doesn't exceed the background dimensions
+        if x + ov_width > bg_width or y + ov_height > bg_height:
+            ov_width = min(ov_width, bg_width - x)
+            ov_height = min(ov_height, bg_height - y)
+            overlay_rgb = cv2.resize(overlay_rgb, (ov_width, ov_height))
+            a = cv2.resize(a, (ov_width, ov_height))
+
+        # Prepare the region for overlay
+        overlay_area = background[y:y + ov_height, x:x + ov_width]
+
+        # Create a mask using the alpha channel
+        mask = a / 255.0
+
+        # Blend the overlay with the background
+        background[y:y + ov_height, x:x + ov_width] = (1.0 - mask[:, :, None]) * overlay_area + mask[:, :,
+                                                                                                None] * overlay_rgb
+
+        return background
     def show_balloon(self, type, frame):
         # Choose image
         balloon_paths = {
@@ -106,14 +139,23 @@ class Act:
                 path = f"{base_path}.png"
             else:
                 path = f"{base_path}_popping{self.stage}.png"
-        overlay_img = cv2.imread(path)
+        overlay_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         overlay_img = cv2.resize(overlay_img, (100, 100))
+
         overlay_height, overlay_width, _ = overlay_img.shape
         overlay_pos = self.location
+
+        # frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+        # frame = self.overlay_png(frame, overlay_img, overlay_pos)
+        self.overlay_png(frame, overlay_img, overlay_pos)
+
         overlay_rect = (
             overlay_pos[0], overlay_pos[1], overlay_pos[0] + overlay_width, overlay_pos[1] + overlay_height)  # hit box
-        frame[overlay_pos[1]:overlay_pos[1] + overlay_height,
-        overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img  # put in frame
+
+        # frame[overlay_pos[1]:overlay_pos[1] + overlay_height,
+        # overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img  # put in frame
+
         return overlay_rect
 
     def random_location(self, frame_width, frame_height):
