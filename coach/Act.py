@@ -1,4 +1,5 @@
 # Act Component: Provide feedback to the user
+import math
 import threading
 import time
 
@@ -16,6 +17,8 @@ import random
 class Act:
 
     def __init__(self):
+        self.popped_count = 0
+        self.finish_time = None
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
         self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left',
@@ -135,6 +138,7 @@ class Act:
             self.stage = 0
             self.current_balloon = random.choice([x for x in self.limb_list if x != self.current_balloon])
             self.location = self.random_location(frame_width, frame_height)
+            self.popped_count += 1
         else:
             self.stage += 1
 
