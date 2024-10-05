@@ -116,16 +116,16 @@ class Act:
     def random_location(self, frame_width, frame_height):
         x, y = 0, 0
         if self.current_balloon == 0:
-            x1lim, x2lim = int(frame_width / 2), frame_width - 100
+            x1lim, x2lim = 0, int(frame_width / 2) - 100
             y1lim, y2lim = 0, int(frame_height / 2) - 100
         elif self.current_balloon == 1:
-            x1lim, x2lim = int(frame_width / 2), frame_width - 100
+            x1lim, x2lim = 0, int(frame_width / 2) - 100
             y1lim, y2lim = int(frame_height / 2), frame_height - 100
         elif self.current_balloon == 2:
-            x1lim, x2lim = 0, int(frame_width / 2) - 100
+            x1lim, x2lim = int(frame_width / 2), frame_width - 100
             y1lim, y2lim = 0, int(frame_height / 2) - 100
         elif self.current_balloon == 3:
-            x1lim, x2lim = 0, int(frame_width / 2) - 100
+            x1lim, x2lim = int(frame_width / 2), frame_width - 100
             y1lim, y2lim = int(frame_height / 2), frame_height - 100
         # return (0, frame_height-100)
         return random.randrange(x1lim, x2lim, 1), random.randrange(y1lim, y2lim, 1)
