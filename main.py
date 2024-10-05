@@ -1,4 +1,5 @@
 import random
+import time
 
 import cv2
 import mediapipe as mp
@@ -26,6 +27,9 @@ def main():
     # Initialize the webcam capture
     cap = cv2.VideoCapture(0)  # Use the default camera (0)
 
+    # Start the timer
+    start_time = time.time()
+    
     # Main loop to process video frames
     while cap.isOpened():
 
@@ -37,12 +41,16 @@ def main():
             print("Failed to grab frame")
             break
 
+        # Calculate elapsed time
+        elapsed_time = time.time() - start_time  # Calculate elapsed time
+
         # Sense: Detect joints
         joints = sense.detect_joints(frame)
         landmarks = joints.pose_landmarks
 
         # If landmarks are detected, calculate the elbow angle
         if landmarks:
+            shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
             left_knee = sense.extract_joint_coordinates(landmarks, "left_knee")
             right_knee = sense.extract_joint_coordinates(landmarks, "right_knee")
             left_wrist = sense.extract_joint_coordinates(landmarks, "left_wrist")
@@ -50,6 +58,14 @@ def main():
             limbs = [left_wrist, left_knee, right_wrist, right_knee]
             overlay_rect = act.show_balloon(act.current_balloon, frame)
             # print(act.current_balloon, limbs[act.current_balloon])
+
+            # Calculate the distance from the camera
+            distance = sense.calculate_distance(landmarks)
+
+            decision = think.state
+
+            act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg, distance=distance, elapsed_time=elapsed_time)
+            
             if think.is_landmark_over_image(limbs[act.current_balloon], overlay_rect, frame_width, frame_height):
                 act.enlarge(frame_width,frame_height)
                 print("Hand is over the image!")
