@@ -67,18 +67,18 @@ class Sense:
         - A tuple of (x, y) coordinates of the specified joint
         """
         joint_index_map = {
-            'left_shoulder': mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
-            'right_shoulder': mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
-            'left_elbow': mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
-            'right_elbow': mp.solutions.pose.PoseLandmark.RIGHT_ELBOW,
-            'left_wrist': mp.solutions.pose.PoseLandmark.LEFT_WRIST,
-            'right_wrist': mp.solutions.pose.PoseLandmark.RIGHT_WRIST,
-            'left_hip': mp.solutions.pose.PoseLandmark.LEFT_HIP,
-            'right_hip': mp.solutions.pose.PoseLandmark.RIGHT_HIP,
-            'left_knee': mp.solutions.pose.PoseLandmark.LEFT_KNEE,
-            'right_knee': mp.solutions.pose.PoseLandmark.RIGHT_KNEE,
-            'left_ankle': mp.solutions.pose.PoseLandmark.LEFT_ANKLE,
-            'right_ankle': mp.solutions.pose.PoseLandmark.RIGHT_ANKLE
+            'right_shoulder': mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+            'left_shoulder': mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
+            'right_elbow': mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
+            'left_elbow': mp.solutions.pose.PoseLandmark.RIGHT_ELBOW,
+            'right_wrist': mp.solutions.pose.PoseLandmark.LEFT_WRIST,
+            'left_wrist': mp.solutions.pose.PoseLandmark.RIGHT_WRIST,
+            'right_hip': mp.solutions.pose.PoseLandmark.LEFT_HIP,
+            'left_hip': mp.solutions.pose.PoseLandmark.RIGHT_HIP,
+            'right_knee': mp.solutions.pose.PoseLandmark.LEFT_KNEE,
+            'left_knee': mp.solutions.pose.PoseLandmark.RIGHT_KNEE,
+            'right_ankle': mp.solutions.pose.PoseLandmark.LEFT_ANKLE,
+            'left_ankle': mp.solutions.pose.PoseLandmark.RIGHT_ANKLE
         }
 
         joint_index = joint_index_map[joint]
@@ -116,3 +116,22 @@ class Sense:
         left_ankle = [landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ANKLE.value].x,
                       landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ANKLE.value].y]
         return self.calculate_angle(left_hip, left_knee, left_ankle)
+
+    def calculate_distance(self, landmarks):
+        """
+        Estimates the distance of the user from the camera based on shoulder width.
+
+        Parameters:
+        - landmarks: The list of pose landmarks from MediaPipe
+
+        Returns:
+        - Distance estimate (in arbitrary units)
+        """
+        left_shoulder = self.extract_joint_coordinates(landmarks, 'left_shoulder')
+        right_shoulder = self.extract_joint_coordinates(landmarks, 'right_shoulder')
+
+        # Calculate the width between shoulders
+        shoulder_distance = math.sqrt((right_shoulder[0] - left_shoulder[0]) ** 2 +
+                                      (right_shoulder[1] - left_shoulder[1]) ** 2)
+
+        return shoulder_distance

@@ -1,4 +1,5 @@
 # Act Component: Provide feedback to the user
+import math
 import threading
 import time
 
@@ -16,14 +17,8 @@ import random
 class Act:
 
     def __init__(self):
-        # Balloon size and transition tracking for visualization
-        self.balloon_size = 50
-        self.transition_count = 0
-        self.max_transitions = 10  # Explodes after 10 transitions
-        self.exploded = False  # Track whether the balloon exploded
-        self.explosion_fragments = []  # Store explosion fragments
-        self.explosion_frame_count = 0  # Frame counter for explosion duration
-        self.explosion_duration = 30  # Number of frames to show explosion effect
+        self.popped_count = 0
+        self.finish_time = None
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
         self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left',
@@ -37,25 +32,6 @@ class Act:
 
         t = threading.Thread(target=self._speech_thread, args=())
         t.start()
-
-    def handle_balloon_inflation(self):
-        """
-        Increases the size of the balloon with each successful repetition.
-        """
-        if not self.exploded:  # Only inflate if balloon hasn't exploded
-
-            self.transition_count += 1
-            self.balloon_size += 10  # Inflate balloon by 10 units per transition
-
-            motivation_text = random.choice(self.motivating_utterances)
-            text = "%s %s" % (self.transition_count, motivation_text)
-
-            self.speak_text(text)
-
-            # Check if balloon should explode
-
-            if self.transition_count >= self.max_transitions:
-                self.explode_balloon()
 
     def speak_text(self, text):
         """
@@ -74,92 +50,7 @@ class Act:
                 self.speech_queue.task_done()
             except queue.Empty:
                 time.sleep(1)
-
-    def explode_balloon(self):
-        """
-        Handles the visual effect of the balloon exploding.
-        """
-
-        self.exploded = True  # Mark the balloon as exploded
-        self.create_explosion_fragments()  # Generate the explosion fragments
-        self.speak_text("boooom booooom booom")
-
-    def reset_balloon(self):
-        """
-        Resets the balloon after it explodes.
-        """
-
-        self.transition_count = 0
-        self.balloon_size = 50  # Reset balloon size
-        self.exploded = False  # Reset explosion state
-        self.explosion_frame_count = 0  # Reset the explosion frame counter
-        self.explosion_fragments.clear()  # Clear the fragments after explosion
-
-        self.speak_text("You did great! Let's reset the balloon.")
-        # Create explosion fragments with random sizes and positions
-
-    def create_explosion_fragments(self):
-        # Generate random "fragments" for explosion effect
-        for _ in range(20):
-            fragment = {
-                'position': (random.randint(200, 300), random.randint(200, 400)),
-                'size': random.randint(5, 15),
-                'color': (0, 0, 255),  # Red fragments
-                'dx': random.randint(-10, 10),  # X-direction movement
-                'dy': random.randint(-10, 10)  # Y-direction movement
-            }
-            self.explosion_fragments.append(fragment)
-
-        # Visualization of the balloon and explosion in OpenCV
-
-    def visualize_balloon(self):
-        """
-        Renders the balloon .
-        """
-
-        # Create a black background
-        img = np.zeros((500, 500, 3), dtype=np.uint8)
-
-        if not self.exploded:
-            # Draw the balloon (a circle) with dynamic size if it hasn't exploded
-            cv2.circle(img, (250, 300), self.balloon_size, (0, 0, 255), -1)  # Red balloon
-        else:
-            # Draw explosion fragments if balloon has exploded
-            for fragment in self.explosion_fragments:
-                x, y = fragment['position']
-                size = fragment['size']
-                color = fragment['color']
-
-                # Move fragments in random directions
-                x += fragment['dx']
-                y += fragment['dy']
-                fragment['position'] = (x, y)
-
-                # Draw each fragment as a small circle
-                cv2.circle(img, (x, y), size, color, -1)
-
-            self.explosion_frame_count += 1
-
-            # Reset the balloon after the explosion effect finishes
-            if self.explosion_frame_count >= self.explosion_duration:
-                self.reset_balloon()
-
-        cv2.putText(img, f'Repeat flexing/bending your left arm to pop the balloon!', (0, 50),
-                    cv2.FONT_HERSHEY_SIMPLEX, .55, (255, 255, 255), 2, cv2.LINE_AA)
-
-        # Add transition count and text
-        cv2.putText(img, f'Repetitions: {self.transition_count}', (150, 100),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(img, f'Balloon Size: {self.balloon_size}', (150, 150),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
-        # Show the image in the window
-        cv2.imshow('Flex and bend your left elbow!', img)
-
-        # Wait for 1 ms and check if the window should be closed
-        cv2.waitKey(1)
-
-    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg):
+    def provide_feedback(self, decision, frame, joints, distance, elapsed_time):
         """
         Displays the skeleton and some text using open cve.
 
@@ -173,28 +64,64 @@ class Act:
         mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
 
         # Define the number and text to display
-        number = elbow_angle_mvg
-        text = " "
-        if decision == 'flexion':
-            text = "You are flexing your elbow! %s" % number
-        elif decision == 'extension':
-            text = "You are extending your elbow! %s" % number
+        text = ""
+        distance_text = ""
 
-        # Set the position, font, size, color, and thickness for the text
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = .9
-        font_color = (0, 0, 0)  # White color in BGR
-        thickness = 2
+        near = 0.2
+        far = 0.00
 
-        # Define the position for the number and text
-        text_position = (50, 50)
+        # Correctly check the distance range
+        if far < distance < near:
+            distance_text = "You are in range."
+        elif far > distance:
+            distance_text = f"You are out of range! Move closer to the camera."
+        elif near < distance:
+            distance_text = f"You are out of range! Move away from the camera."
 
         # Draw the text on the image
-        cv2.putText(frame, text, text_position, font, font_scale, font_color, thickness)
+        cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
+                    2)  # White color for contrast
+        cv2.putText(frame, distance_text, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255),
+                    2)  # Adjusted y-coordinate
+        # Format the elapsed time to display
+        elapsed_time_text = f"Duration: {elapsed_time:.2f} seconds"
+        cv2.putText(frame, elapsed_time_text, (50, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+        # Display the frame
+        # cv2.imshow('Sport Coaching Program', frame)
 
-        # Display the frame (for debugging purposes)
-        cv2.imshow('Sport Coaching Program', frame)
+    def overlay_png(self, background, overlay, pos=(0, 0), overlay_size=None):
+        # Resize the overlay if a size is specified
+        if overlay_size is not None:
+            overlay = cv2.resize(overlay, overlay_size)
 
+        # Split the channels (B, G, R, A)
+        b, g, r, a = cv2.split(overlay)
+        overlay_rgb = cv2.merge((b, g, r))
+
+        # Get dimensions of background and overlay
+        bg_height, bg_width = background.shape[:2]
+        ov_height, ov_width = overlay_rgb.shape[:2]
+
+        x, y = pos
+
+        # Ensure the overlay doesn't exceed the background dimensions
+        if x + ov_width > bg_width or y + ov_height > bg_height:
+            ov_width = min(ov_width, bg_width - x)
+            ov_height = min(ov_height, bg_height - y)
+            overlay_rgb = cv2.resize(overlay_rgb, (ov_width, ov_height))
+            a = cv2.resize(a, (ov_width, ov_height))
+
+        # Prepare the region for overlay
+        overlay_area = background[y:y + ov_height, x:x + ov_width]
+
+        # Create a mask using the alpha channel
+        mask = a / 255.0
+
+        # Blend the overlay with the background
+        background[y:y + ov_height, x:x + ov_width] = (1.0 - mask[:, :, None]) * overlay_area + mask[:, :,
+                                                                                                None] * overlay_rgb
+
+        return background
     def show_balloon(self, type, frame):
         # Choose image
         balloon_paths = {
@@ -215,29 +142,38 @@ class Act:
                 path = f"{base_path}.png"
             else:
                 path = f"{base_path}_popping{self.stage}.png"
-        overlay_img = cv2.imread(path)
+        overlay_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         overlay_img = cv2.resize(overlay_img, (100, 100))
+
         overlay_height, overlay_width, _ = overlay_img.shape
         overlay_pos = self.location
+
+        # frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+        # frame = self.overlay_png(frame, overlay_img, overlay_pos)
+        self.overlay_png(frame, overlay_img, overlay_pos)
+
         overlay_rect = (
             overlay_pos[0], overlay_pos[1], overlay_pos[0] + overlay_width, overlay_pos[1] + overlay_height)  # hit box
-        frame[overlay_pos[1]:overlay_pos[1] + overlay_height,
-        overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img  # put in frame
+
+        # frame[overlay_pos[1]:overlay_pos[1] + overlay_height,
+        # overlay_pos[0]:overlay_pos[0] + overlay_width] = overlay_img  # put in frame
+
         return overlay_rect
 
     def random_location(self, frame_width, frame_height):
         x, y = 0, 0
         if self.current_balloon == 0:
-            x1lim, x2lim = int(frame_width / 2), frame_width - 100
+            x1lim, x2lim = 0, int(frame_width / 2) - 100
             y1lim, y2lim = 0, int(frame_height / 2) - 100
         elif self.current_balloon == 1:
-            x1lim, x2lim = int(frame_width / 2), frame_width - 100
+            x1lim, x2lim = 0, int(frame_width / 2) - 100
             y1lim, y2lim = int(frame_height / 2), frame_height - 100
         elif self.current_balloon == 2:
-            x1lim, x2lim = 0, int(frame_width / 2) - 100
+            x1lim, x2lim = int(frame_width / 2), frame_width - 100
             y1lim, y2lim = 0, int(frame_height / 2) - 100
         elif self.current_balloon == 3:
-            x1lim, x2lim = 0, int(frame_width / 2) - 100
+            x1lim, x2lim = int(frame_width / 2), frame_width - 100
             y1lim, y2lim = int(frame_height / 2), frame_height - 100
         # return (0, frame_height-100)
         return random.randrange(x1lim, x2lim, 1), random.randrange(y1lim, y2lim, 1)
@@ -247,6 +183,7 @@ class Act:
             self.stage = 0
             self.current_balloon = random.choice([x for x in self.limb_list if x != self.current_balloon])
             self.location = self.random_location(frame_width, frame_height)
+            self.popped_count += 1
         else:
             self.stage += 1
 
