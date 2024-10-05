@@ -16,14 +16,6 @@ import random
 class Act:
 
     def __init__(self):
-        # Balloon size and transition tracking for visualization
-        self.balloon_size = 50
-        self.transition_count = 0
-        self.max_transitions = 10  # Explodes after 10 transitions
-        self.exploded = False  # Track whether the balloon exploded
-        self.explosion_fragments = []  # Store explosion fragments
-        self.explosion_frame_count = 0  # Frame counter for explosion duration
-        self.explosion_duration = 30  # Number of frames to show explosion effect
         self.engine = pyttsx3.init()
         self.speech_queue = queue.Queue()
         self.motivating_utterances = ['keep on going', 'you are doing great. I see it', 'only a few left',
@@ -37,25 +29,6 @@ class Act:
 
         t = threading.Thread(target=self._speech_thread, args=())
         t.start()
-
-    def handle_balloon_inflation(self):
-        """
-        Increases the size of the balloon with each successful repetition.
-        """
-        if not self.exploded:  # Only inflate if balloon hasn't exploded
-
-            self.transition_count += 1
-            self.balloon_size += 10  # Inflate balloon by 10 units per transition
-
-            motivation_text = random.choice(self.motivating_utterances)
-            text = "%s %s" % (self.transition_count, motivation_text)
-
-            self.speak_text(text)
-
-            # Check if balloon should explode
-
-            if self.transition_count >= self.max_transitions:
-                self.explode_balloon()
 
     def speak_text(self, text):
         """
@@ -74,44 +47,6 @@ class Act:
                 self.speech_queue.task_done()
             except queue.Empty:
                 time.sleep(1)
-
-    def explode_balloon(self):
-        """
-        Handles the visual effect of the balloon exploding.
-        """
-
-        self.exploded = True  # Mark the balloon as exploded
-        self.create_explosion_fragments()  # Generate the explosion fragments
-        self.speak_text("boooom booooom booom")
-
-    def reset_balloon(self):
-        """
-        Resets the balloon after it explodes.
-        """
-
-        self.transition_count = 0
-        self.balloon_size = 50  # Reset balloon size
-        self.exploded = False  # Reset explosion state
-        self.explosion_frame_count = 0  # Reset the explosion frame counter
-        self.explosion_fragments.clear()  # Clear the fragments after explosion
-
-        self.speak_text("You did great! Let's reset the balloon.")
-        # Create explosion fragments with random sizes and positions
-
-    def create_explosion_fragments(self):
-        # Generate random "fragments" for explosion effect
-        for _ in range(20):
-            fragment = {
-                'position': (random.randint(200, 300), random.randint(200, 400)),
-                'size': random.randint(5, 15),
-                'color': (0, 0, 255),  # Red fragments
-                'dx': random.randint(-10, 10),  # X-direction movement
-                'dy': random.randint(-10, 10)  # Y-direction movement
-            }
-            self.explosion_fragments.append(fragment)
-
-        # Visualization of the balloon and explosion in OpenCV
-
     def visualize_balloon(self):
         """
         Renders the balloon .
