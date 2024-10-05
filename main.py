@@ -64,7 +64,7 @@ def main():
             if act.finish_time is None:
                 act.finish_time = elapsed_time
             end_screen = cv2.imread("images/balloons_end_screen.png")
-            cv2.putText(end_screen, f'{act.finish_time:.2f}s', (490, 220), cv2.FONT_HERSHEY_COMPLEX, 1.4, (255, 160, 230), 4, cv2.LINE_AA)
+            cv2.putText(end_screen, f'{act.finish_time:.2f}s', (255, 280), cv2.FONT_HERSHEY_COMPLEX, 1.6, (255, 160, 230), 4, cv2.LINE_AA)
             cv2.imshow("Pop The Balloons", end_screen)
 
             if cv2.waitKey(10) & 0xFF == ord(' '):

@@ -67,12 +67,15 @@ class Act:
         text = ""
         distance_text = ""
 
+        near = 0.2
+        far = 0.00
+
         # Correctly check the distance range
-        if 0.4 < distance < 0.5:
+        if far < distance < near:
             distance_text = "You are in range."
-        elif 0.4 > distance:
+        elif far > distance:
             distance_text = f"You are out of range! Move closer to the camera."
-        elif 0.5 < distance:
+        elif near < distance:
             distance_text = f"You are out of range! Move away from the camera."
 
         # Draw the text on the image
