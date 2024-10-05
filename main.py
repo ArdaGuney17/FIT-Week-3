@@ -28,7 +28,7 @@ def main():
     cap = cv2.VideoCapture(0)  # Use the default camera (0)
 
     # Start the timer
-    start_time = time.time()
+    start_time = time.time() + 15
     
     # Main loop to process video frames
     while cap.isOpened():
@@ -44,36 +44,44 @@ def main():
             print("Failed to grab frame")
             break
 
+
         # Calculate elapsed time
         elapsed_time = time.time() - start_time  # Calculate elapsed time
 
-        # Sense: Detect joints
-        joints = sense.detect_joints(frame)
-        landmarks = joints.pose_landmarks
+        tutorial = cv2.imread("images/balloon_tutorial.png")
 
-        # If landmarks are detected, calculate the elbow angle
-        if landmarks:
-            shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
-            left_knee = sense.extract_joint_coordinates(landmarks, "left_knee")
-            right_knee = sense.extract_joint_coordinates(landmarks, "right_knee")
-            left_wrist = sense.extract_joint_coordinates(landmarks, "left_wrist")
-            right_wrist = sense.extract_joint_coordinates(landmarks, "right_wrist")
-            limbs = [left_wrist, left_knee, right_wrist, right_knee]
-            overlay_rect = act.show_balloon(act.current_balloon, frame)
-            # print(act.current_balloon, limbs[act.current_balloon])
+        if elapsed_time < 0:
+            cv2.imshow("Pop The Balloons", tutorial)
+        else:
+            # Sense: Detect joints
+            joints = sense.detect_joints(frame)
+            landmarks = joints.pose_landmarks
 
-            # Calculate the distance from the camera
-            distance = sense.calculate_distance(landmarks)
+            # If landmarks are detected, calculate the elbow angle
+            if landmarks:
+                shoulder = sense.extract_joint_coordinates(landmarks, 'left_shoulder')
+                left_knee = sense.extract_joint_coordinates(landmarks, "left_knee")
+                right_knee = sense.extract_joint_coordinates(landmarks, "right_knee")
+                left_wrist = sense.extract_joint_coordinates(landmarks, "left_wrist")
+                right_wrist = sense.extract_joint_coordinates(landmarks, "right_wrist")
+                limbs = [left_wrist, left_knee, right_wrist, right_knee]
+                overlay_rect = act.show_balloon(act.current_balloon, frame)
+                # print(act.current_balloon, limbs[act.current_balloon])
 
-            decision = think.state
+                # Calculate the distance from the camera
+                distance = sense.calculate_distance(landmarks)
 
-            act.provide_feedback(decision, frame=frame, joints=joints, distance=distance, elapsed_time=elapsed_time)
-            
-            if think.is_landmark_over_image(limbs[act.current_balloon], overlay_rect, frame_width, frame_height):
-                act.enlarge(frame_width,frame_height)
-                print("Hand is over the image!")
-            mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
-            cv2.imshow("Webcam Feed", frame)
+                decision = think.state
+
+                act.provide_feedback(decision, frame=frame, joints=joints, distance=distance, elapsed_time=elapsed_time)
+
+                if think.is_landmark_over_image(limbs[act.current_balloon], overlay_rect, frame_width, frame_height):
+                    act.enlarge(frame_width,frame_height)
+                    print("Hand is over the image!")
+                mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
+
+
+                cv2.imshow("Pop The Balloons", frame)
 
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
