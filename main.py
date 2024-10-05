@@ -68,7 +68,14 @@ def main():
             cv2.imshow("Pop The Balloons", end_screen)
 
             if cv2.waitKey(10) & 0xFF == ord(' '):
-                break
+                # Restart
+                act.finish_time = None
+                act.popped_count = 0
+                act.stage = 0
+                act.location = (500, 100)
+                act.current_balloon = 0
+                start_time = time.time()
+
             continue
 
         # Sense: Detect joints
