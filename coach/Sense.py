@@ -67,18 +67,18 @@ class Sense:
         - A tuple of (x, y) coordinates of the specified joint
         """
         joint_index_map = {
-            'left_shoulder': mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
-            'right_shoulder': mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
-            'left_elbow': mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
-            'right_elbow': mp.solutions.pose.PoseLandmark.RIGHT_ELBOW,
-            'left_wrist': mp.solutions.pose.PoseLandmark.LEFT_WRIST,
-            'right_wrist': mp.solutions.pose.PoseLandmark.RIGHT_WRIST,
-            'left_hip': mp.solutions.pose.PoseLandmark.LEFT_HIP,
-            'right_hip': mp.solutions.pose.PoseLandmark.RIGHT_HIP,
-            'left_knee': mp.solutions.pose.PoseLandmark.LEFT_KNEE,
-            'right_knee': mp.solutions.pose.PoseLandmark.RIGHT_KNEE,
-            'left_ankle': mp.solutions.pose.PoseLandmark.LEFT_ANKLE,
-            'right_ankle': mp.solutions.pose.PoseLandmark.RIGHT_ANKLE
+            'right_shoulder': mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+            'left_shoulder': mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
+            'right_elbow': mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
+            'left_elbow': mp.solutions.pose.PoseLandmark.RIGHT_ELBOW,
+            'right_wrist': mp.solutions.pose.PoseLandmark.LEFT_WRIST,
+            'left_wrist': mp.solutions.pose.PoseLandmark.RIGHT_WRIST,
+            'right_hip': mp.solutions.pose.PoseLandmark.LEFT_HIP,
+            'left_hip': mp.solutions.pose.PoseLandmark.RIGHT_HIP,
+            'right_knee': mp.solutions.pose.PoseLandmark.LEFT_KNEE,
+            'left_knee': mp.solutions.pose.PoseLandmark.RIGHT_KNEE,
+            'right_ankle': mp.solutions.pose.PoseLandmark.LEFT_ANKLE,
+            'left_ankle': mp.solutions.pose.PoseLandmark.RIGHT_ANKLE
         }
 
         joint_index = joint_index_map[joint]
