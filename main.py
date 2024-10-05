@@ -35,6 +35,9 @@ def main():
 
         # Capture frame-by-frame from the webcam
         ret, frame = cap.read()
+
+        frame = cv2.flip(frame, 1)
+
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         if not ret:
@@ -64,13 +67,12 @@ def main():
 
             decision = think.state
 
-            act.provide_feedback(decision, frame=frame, joints=joints, elbow_angle_mvg=elbow_angle_mvg, distance=distance, elapsed_time=elapsed_time)
+            act.provide_feedback(decision, frame=frame, joints=joints, distance=distance, elapsed_time=elapsed_time)
             
             if think.is_landmark_over_image(limbs[act.current_balloon], overlay_rect, frame_width, frame_height):
                 act.enlarge(frame_width,frame_height)
                 print("Hand is over the image!")
             mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
-            frame = cv2.flip(frame, 1)
             cv2.imshow("Webcam Feed", frame)
 
         if cv2.waitKey(10) & 0xFF == ord('q'):

@@ -159,7 +159,7 @@ class Act:
         # Wait for 1 ms and check if the window should be closed
         cv2.waitKey(1)
 
-    def provide_feedback(self, decision, frame, joints, elbow_angle_mvg, distance, elapsed_time):
+    def provide_feedback(self, decision, frame, joints, distance, elapsed_time):
         """
         Displays the skeleton and some text using open cve.
 
@@ -173,14 +173,8 @@ class Act:
         mp.solutions.drawing_utils.draw_landmarks(frame, joints.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
 
         # Define the number and text to display
-        number = elbow_angle_mvg
         text = ""
         distance_text = ""
-        
-        if decision == 'flexion':
-            text = "You are flexing your elbow! %s" % number
-        elif decision == 'extension':
-            text = "You are extending your elbow! %s" % number
 
         # Correctly check the distance range
         if 0.4 < distance < 0.5:
@@ -199,7 +193,7 @@ class Act:
         elapsed_time_text = f"Duration: {elapsed_time:.2f} seconds"
         cv2.putText(frame, elapsed_time_text, (50, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
         # Display the frame
-        cv2.imshow('Sport Coaching Program', frame)
+        # cv2.imshow('Sport Coaching Program', frame)
 
     def show_balloon(self, type, frame):
         # Choose image
